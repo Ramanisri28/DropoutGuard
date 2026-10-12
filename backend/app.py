@@ -60,7 +60,7 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = os.getenv('COOKIE_SECURE', 'false').lower() == 'true'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
-CORS(app)
+CORS(app, supports_credentials=True, origins=['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'http://127.0.0.1:3000'])
 app.config['JSON_SORT_KEYS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
@@ -916,6 +916,16 @@ def csv_template():
 @app.errorhandler(413)
 def request_too_large(_error):
     return jsonify({'success': False, 'message': 'CSV exceeds the 16 MB upload limit.'}), 413
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({'success': False, 'message': f'Internal server error: {str(error)}'}), 500
+
+
+@app.errorhandler(Exception)
+def handle_exception(error):
+    return jsonify({'success': False, 'message': f'An error occurred: {str(error)}'}), 500
 
 
 @app.route('/api/train-model', methods=['POST'])

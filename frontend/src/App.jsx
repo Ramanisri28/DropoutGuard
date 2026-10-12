@@ -73,6 +73,7 @@ function LoginPage({ onAuthenticated, notice }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, name, purpose }),
+        credentials: 'include',
       })
       const result = await response.json()
       if (!response.ok) {
@@ -97,6 +98,7 @@ function LoginPage({ onAuthenticated, notice }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code, purpose }),
+        credentials: 'include',
       })
       const result = await response.json()
       if (!response.ok) {
@@ -295,14 +297,14 @@ function App() {
   })
 
   const fetchDashboard = async () => {
-    const response = await fetch(`${API_BASE}/dashboard`)
+    const response = await fetch(`${API_BASE}/dashboard`, { credentials: 'include' })
     if (!response.ok) return
     const data = await response.json()
     setDashboard(data)
   }
 
   const fetchStudents = async () => {
-    const response = await fetch(`${API_BASE}/students`)
+    const response = await fetch(`${API_BASE}/students`, { credentials: 'include' })
     if (!response.ok) return
     const data = await response.json()
     setStudents(data.students || [])
@@ -314,16 +316,16 @@ function App() {
 
   const fetchStudentDetails = async (studentId) => {
     if (!studentId) return
-    const response = await fetch(`${API_BASE}/students/${studentId}`)
+    const response = await fetch(`${API_BASE}/students/${studentId}`, { credentials: 'include' })
     if (!response.ok) return
     const data = await response.json()
     setSelectedStudent(data.student)
-    const riskResponse = await fetch(`${API_BASE}/risk/${studentId}`)
+    const riskResponse = await fetch(`${API_BASE}/risk/${studentId}`, { credentials: 'include' })
     if (riskResponse.ok) {
       const riskData = await riskResponse.json()
       setRiskInsight(riskData)
     }
-    const recommendationResponse = await fetch(`${API_BASE}/recommendations/${studentId}`)
+    const recommendationResponse = await fetch(`${API_BASE}/recommendations/${studentId}`, { credentials: 'include' })
     if (recommendationResponse.ok) {
       const recommendationData = await recommendationResponse.json()
       setRecommendations([recommendationData])
@@ -331,14 +333,14 @@ function App() {
   }
 
   const fetchAppointments = async () => {
-    const response = await fetch(`${API_BASE}/appointments`)
+    const response = await fetch(`${API_BASE}/appointments`, { credentials: 'include' })
     if (!response.ok) return
     const data = await response.json()
     setAppointments(data.appointments || [])
   }
 
   const fetchModelInfo = async () => {
-    const response = await fetch(`${API_BASE}/model`)
+    const response = await fetch(`${API_BASE}/model`, { credentials: 'include' })
     if (!response.ok) return
     const data = await response.json()
     setModelInfo(data)
@@ -346,7 +348,7 @@ function App() {
 
   useEffect(() => {
     let active = true
-    fetch(`${API_BASE}/auth/session`)
+    fetch(`${API_BASE}/auth/session`, { credentials: 'include' })
       .then(async (response) => {
         if (!response.ok) return
         const result = await response.json()
@@ -379,7 +381,7 @@ function App() {
 
   const signOut = async () => {
     try {
-      const response = await fetch(`${API_BASE}/auth/logout`, { method: 'POST' })
+      const response = await fetch(`${API_BASE}/auth/logout`, { method: 'POST', credentials: 'include' })
       if (!response.ok) {
         setNotice('Could not sign out. Please try again.')
         return
@@ -441,7 +443,7 @@ function App() {
       const formData = new FormData()
       formData.append('file', file)
       if (shouldReplace) formData.append('replace_existing', 'true')
-      const response = await fetch(`${API_BASE}/upload-csv`, { method: 'POST', body: formData })
+      const response = await fetch(`${API_BASE}/upload-csv`, { method: 'POST', body: formData, credentials: 'include' })
       const result = await response.json()
       return { response, result }
     }
@@ -480,7 +482,7 @@ function App() {
     setUploadBusy(true)
     setUploadError(false)
     try {
-      const response = await fetch(`${API_BASE}/train-model`, { method: 'POST' })
+      const response = await fetch(`${API_BASE}/train-model`, { method: 'POST', credentials: 'include' })
       const result = await response.json()
       setUploadError(!response.ok || !result.success)
       setUploadMessage(result.message || 'Model training complete')
@@ -535,6 +537,7 @@ function App() {
       return
     }
     const response = await fetch(`${API_BASE}/students`, {
+      credentials: 'include',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -554,7 +557,7 @@ function App() {
     const confirmed = window.confirm(`Delete student ${studentId}? This cannot be undone.`)
     if (!confirmed) return
 
-    const response = await fetch(`${API_BASE}/students/${studentId}`, { method: 'DELETE' })
+    const response = await fetch(`${API_BASE}/students/${studentId}`, { method: 'DELETE', credentials: 'include' })
     const result = await response.json()
     if (result.success) {
       setNotice(`Student ${studentId} was removed.`)
@@ -577,6 +580,7 @@ function App() {
     }
 
     const response = await fetch(`${API_BASE}/appointments`, {
+      credentials: 'include',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -593,7 +597,7 @@ function App() {
   }
 
   const exportReport = () => {
-    fetch(`${API_BASE}/reports/export.csv`)
+    fetch(`${API_BASE}/reports/export.csv`, { credentials: 'include' })
       .then(async (response) => {
         if (!response.ok) {
           const result = await response.json().catch(() => ({}))
@@ -614,6 +618,7 @@ function App() {
     setUpdatingAppointmentId(appointmentId)
     try {
       const response = await fetch(`${API_BASE}/appointments/${appointmentId}`, {
+        credentials: 'include',
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
@@ -1160,7 +1165,7 @@ function App() {
           <div className="metric-pill"><span>Latest version</span><strong>{modelInfo.latest?.version || 'Not trained'}</strong></div>
           <div className="metric-pill"><span>Dataset</span><strong>{modelInfo.latest?.dataset_name || 'No data file'}</strong></div>
           <div className="metric-pill"><span>F1 score</span><strong>{(modelInfo.latest?.metrics?.metrics?.f1_score ?? modelInfo.latest?.metrics?.f1_score) != null ? (modelInfo.latest.metrics.metrics?.f1_score ?? modelInfo.latest.metrics.f1_score).toFixed(3) : '—'}</strong></div>
-          <div className="metric-pill"><span>Current student data</span><strong>{dashboard?.dataset?.active ? `${dashboard.dataset.student_count} imported records` : 'Demo records'}</strong></div>
+          <div className="metric-pill"><span>Current student data</span><strong>{dashboard?.dataset?.active ? `${dashboard.dataset.student_count} imported records` : 'No data imported'}</strong></div>
         </div>
       </div>
     </div>

@@ -149,71 +149,10 @@ def init_db():
 
 
 def seed_demo_data():
+    """Initialize database schema only. No demo data is seeded."""
     with get_connection() as conn:
-        user_count = conn.execute('SELECT COUNT(*) FROM users').fetchone()[0]
-        if user_count == 0:
-            from werkzeug.security import generate_password_hash
-            conn.execute(
-                'INSERT INTO users (email, name, role, password_hash) VALUES (?, ?, ?, ?)',
-                ('admin@college.edu', 'Dr. Meera Singh', 'Administrator', generate_password_hash('Admin@123')),
-            )
-            conn.execute(
-                'INSERT INTO users (email, name, role, password_hash) VALUES (?, ?, ?, ?)',
-                ('faculty@college.edu', 'Prof. Aditi Nair', 'Faculty', generate_password_hash('Faculty@123')),
-            )
-
-        student_count = conn.execute('SELECT COUNT(*) FROM students').fetchone()[0]
-        if student_count == 0:
-            rows = [
-                ('STU-1001', 'Aarav Nair', 'Computer Science', 2, 4, 91, 88, 1, 'Scholarship', 'Low', '2026-09-18', 0.18),
-                ('STU-1002', 'Sana Iqbal', 'Electronics', 3, 5, 74, 67, 2, 'Need-based Aid', 'High', '2026-09-10', 0.76),
-                ('STU-1003', 'Rohit Verma', 'Mechanical', 2, 3, 97, 92, 0, 'Scholarship', 'Low', '2026-09-21', 0.12),
-                ('STU-1004', 'Priya Das', 'Civil', 1, 2, 64, 55, 3, 'No Support', 'High', '2026-08-15', 0.83),
-                ('STU-1005', 'Karthik Menon', 'Computer Science', 3, 6, 83, 79, 1, 'Scholarship', 'Medium', '2026-09-16', 0.45),
-                ('STU-1006', 'Ishita Rao', 'Biotechnology', 2, 4, 58, 62, 2, 'Need-based Aid', 'Medium', '2026-09-09', 0.58),
-                ('STU-1007', 'Aditya Shah', 'Electrical', 4, 8, 90, 86, 1, 'Scholarship', 'Low', '2026-09-22', 0.19),
-                ('STU-1008', 'Naina Patel', 'Business', 3, 5, 71, 59, 2, 'No Support', 'High', '2026-08-28', 0.88),
-            ]
-            conn.executemany(
-                """
-                INSERT INTO students (
-                    student_id, name, department, year, semester, attendance_percentage,
-                    average_marks, active_backlogs, financial_support, estimated_risk,
-                    last_counseling_date, risk_score
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                rows,
-            )
-
-        case_count = conn.execute('SELECT COUNT(*) FROM counseling_cases').fetchone()[0]
-        if case_count == 0:
-            conn.executemany(
-                """
-                INSERT INTO counseling_cases (
-                    student_id, concerns, recommendations, assigned_faculty,
-                    appointment_date, status, follow_up_date, notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                [
-                    ('STU-1002', 'Low attendance, 2 active backlogs, financial pressure', 'Supportive attendance discussion; faculty mentoring plan; scholarship referral', 'Prof. Aditi Nair', '2026-10-15', 'Scheduled', '2026-10-29', 'Parent consultation requested.'),
-                    ('STU-1004', 'Academic performance below benchmark, absenteeism, fee stress', 'Remedial class enrollment; financial aid guidance; early counseling session', 'Dr. Meera Singh', '2026-10-12', 'Pending', '2026-10-24', 'Academic advisor to coordinate support. '),
-                    ('STU-1008', 'Two unresolved backlogs and declining participation', 'Personalized academic recovery plan; targeted mentoring; follow-up check-in', 'Prof. Aditi Nair', '2026-10-17', 'In Progress', '2026-10-31', 'Student agrees to attend tutoring sessions.')
-                ],
-            )
-
-        appointment_count = conn.execute('SELECT COUNT(*) FROM appointments').fetchone()[0]
-        if appointment_count == 0:
-            conn.executemany(
-                """
-                INSERT INTO appointments (student_id, student_name, counselor_name, appointment_date, appointment_time, session_type, status, follow_up)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                [
-                    ('STU-1002', 'Sana Iqbal', 'Prof. Aditi Nair', '2026-10-15', '09:30', 'Academic counseling', 'Scheduled', '2026-10-29'),
-                    ('STU-1004', 'Priya Das', 'Dr. Meera Singh', '2026-10-12', '14:00', 'Financial support review', 'Pending', '2026-10-24'),
-                    ('STU-1008', 'Naina Patel', 'Prof. Aditi Nair', '2026-10-17', '11:15', 'Progress review', 'Scheduled', '2026-10-31')
-                ],
-            )
+        # Ensure tables exist but don't add any demo records
+        pass
 
 
 def list_students(search=None, department=None, year=None, semester=None, risk=None):
