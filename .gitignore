@@ -1,0 +1,31 @@
+# Environment files and credentials
+.env
+.env.*
+!.env.example
+
+# Python caches and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local backend data and generated models
+backend/*.db
+backend/*.db-*
+backend/*.sqlite*
+backend/trained_model.joblib
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/logs/
+
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
