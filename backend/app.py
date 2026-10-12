@@ -851,9 +851,9 @@ def upload_csv():
 
     target_column, feature_columns, missing_training_columns = get_training_readiness(df.columns)
     feature_columns = [column for column in feature_columns if df[column].notna().any()]
-    if target_column and not feature_columns and 'student data columns' not in missing_training_columns:
-        missing_training_columns.append('student data columns')
-    training_ready = bool(feature_columns) and not missing_training_columns
+    # Training is now always ready if there are feature columns (auto-generates labels if no target column)
+    training_ready = bool(feature_columns)
+    missing_training_columns = [] if training_ready else ['student data columns']
     active_dataset_path = UPLOAD_DIR / 'active_dataset.csv'
     legacy_dataset_path = UPLOAD_DIR / 'uploaded_students.csv'
     existing_upload = active_dataset_path.exists() or legacy_dataset_path.exists()
@@ -897,7 +897,7 @@ def upload_csv():
         'message': (
             'Dataset analyzed and ready for model training.'
             if training_ready
-            else 'Dataset analyzed. Add a risk_status, dropout_status, or outcome column to enable model training.'
+            else 'Dataset analyzed. Add at least one student data column (like attendance, marks, backlogs) to enable model training.'
         ),
     })
 

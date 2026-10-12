@@ -140,6 +140,38 @@ def _get_dataset_path():
     return candidates[-1]
 
 
+def _infer_risk_labels(df, feature_cols):
+    """Auto-generate risk labels (0/1) based on data characteristics."""
+    risk_flags = pd.Series(0, index=df.index, dtype=int)
+    
+    # Check for low attendance (< 75%)
+    attendance_cols = [col for col in feature_cols if 'attendance' in col.lower()]
+    for col in attendance_cols:
+        numeric_vals = pd.to_numeric(df[col], errors='coerce')
+        risk_flags += (numeric_vals < 75).fillna(False).astype(int)
+    
+    # Check for low marks/grades (< 60)
+    marks_cols = [col for col in feature_cols if any(x in col.lower() for x in ['mark', 'score', 'grade', 'gpa', 'average'])]
+    for col in marks_cols:
+        numeric_vals = pd.to_numeric(df[col], errors='coerce')
+        risk_flags += (numeric_vals < 60).fillna(False).astype(int)
+    
+    # Check for high backlogs (>= 2)
+    backlog_cols = [col for col in feature_cols if 'backlog' in col.lower()]
+    for col in backlog_cols:
+        numeric_vals = pd.to_numeric(df[col], errors='coerce')
+        risk_flags += (numeric_vals >= 2).fillna(False).astype(int)
+    
+    # Check for financial difficulty indicators
+    financial_cols = [col for col in feature_cols if any(x in col.lower() for x in ['financial', 'support', 'aid'])]
+    for col in financial_cols:
+        str_vals = df[col].astype(str).str.lower()
+        risk_flags += (str_vals.isin(['yes', 'high', 'critical', 'needed', 'required'])).astype(int)
+    
+    # Normalize: students with 2+ risk factors are high-risk (1), otherwise low-risk (0)
+    return (risk_flags >= 2).astype(int)
+
+
 def train_model_from_file(dataset_path=None):
     path = Path(dataset_path) if dataset_path else _get_dataset_path()
     df = pd.read_csv(path)
@@ -147,20 +179,24 @@ def train_model_from_file(dataset_path=None):
         raise ValueError('The dataset is empty. Please upload a valid CSV file.')
 
     target_column, feature_cols, missing_columns = get_training_readiness(df.columns)
-    if missing_columns:
-        raise ValueError(
-            'Model training requires an outcome/status column such as risk_status, '
-            'dropout_status, or outcome, with at least one student data column.'
-        )
-    if not feature_cols:
-        raise ValueError('Add at least one student data column besides the outcome/status.')
-    feature_cols = [column for column in feature_cols if df[column].notna().any()]
-    if not feature_cols:
-        raise ValueError('The student data columns are empty; add at least one value before training.')
-
-    y = _normalize_binary_column(df[target_column], target_column)
-    if y.isna().any():
-        raise ValueError(f"Column '{target_column}' cannot contain blank values.")
+    
+    # If no target column exists, auto-generate labels based on risk indicators
+    if not target_column:
+        if not feature_cols:
+            raise ValueError('Add at least one student data column to train the model.')
+        feature_cols = [column for column in feature_cols if df[column].notna().any()]
+        if not feature_cols:
+            raise ValueError('The student data columns are empty; add at least one value before training.')
+        y = _infer_risk_labels(df, feature_cols)
+    else:
+        if not feature_cols:
+            raise ValueError('Add at least one student data column besides the outcome/status.')
+        feature_cols = [column for column in feature_cols if df[column].notna().any()]
+        if not feature_cols:
+            raise ValueError('The student data columns are empty; add at least one value before training.')
+        y = _normalize_binary_column(df[target_column], target_column)
+        if y.isna().any():
+            raise ValueError(f"Column '{target_column}' cannot contain blank values.")
     if y.value_counts().min() < 2:
         raise ValueError('The outcome/status column needs at least two rows for each class.')
     if y.nunique() < 2:

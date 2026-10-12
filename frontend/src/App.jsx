@@ -1131,14 +1131,11 @@ function App() {
           <button type="button" className="primary-button" disabled={uploadBusy} onClick={handleTrainModel}><ShieldCheck size={16} /> Train model</button>
         </div>
         <a className="text-button template-link" href={`${API_BASE}/csv-template`}>Download a CSV template</a>
-        <p className={`notice-text ${uploadError ? 'error' : ''}`}>{uploadMessage || 'CSV files up to 16 MB. Add any student details or indicators you have; headers are flexible, and student IDs are generated if omitted. The app analyzes the supplied values. To train a model, include a risk_status, status, dropout_status, or outcome column.'}</p>
+        <p className={`notice-text ${uploadError ? 'error' : ''}`}>{uploadMessage || 'CSV files up to 16 MB. Add any student details or indicators (attendance, marks, backlogs, financial status, etc.); headers are flexible, and student IDs are generated if omitted. The app analyzes the data and auto-generates risk labels for model training.'}</p>
         {uploadPreview.length > 0 ? (
           <p className={`upload-readiness ${trainingReady ? 'ready' : 'incomplete'}`}>
-            {trainingReady ? 'Analyzed and ready for model training.' : 'Uploaded and analyzed. Training is optional and requires an outcome/status column.'}
+            {trainingReady ? 'Analyzed and ready for model training.' : 'Uploaded and analyzed. Add at least one student data column to enable model training.'}
           </p>
-        ) : null}
-        {trainingColumnsMissing.length > 0 ? (
-          <p className="upload-hint">Training needs a label column such as {trainingColumnsMissing.join(', ')}. You can still analyze the supplied data without one.</p>
         ) : null}
         {uploadPreview.length ? (
           <div className="table-wrapper mini-table">
